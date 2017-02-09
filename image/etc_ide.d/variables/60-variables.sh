@@ -6,4 +6,4 @@
 ###########################################################################
 
 export this_image_name="python2-ide"
-export this_image_tag="IMAGE_VERSION"
+export this_image_tag="0.1.0"

@@ -75,7 +75,6 @@ desc 'Test if configuration files exist to fail fast'
 task :end_user_prep do #TODO fix these tests
   test_ide_work = File.join(
     File.dirname(__FILE__), 'test/integration/end_user/test_ide_work/')
-  FileUtils.rm_r("#{test_ide_work}/libstc") if File.directory?("#{test_ide_work}/libstc")
 
   # copy real identity files into a directory which will be mounted as
   # /ide/identity
