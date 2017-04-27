@@ -42,9 +42,28 @@ if [ -f "${ide_identity}/.gitconfig" ]; then
   cp "${ide_identity}/.gitconfig" "${ide_home}"
 fi
 
-# Not obligatory file; in order to ensure that after bash login, the ide user
-# is in /ide/work. Not obligatory but shortens end user's commands.
-# Do not copy it from $ide_identity, because it may reference sth not installed in
+# 1. Ensure that after bash login pwd is /ide/work
+# 2. Specify which devpi-server index to use. The `--set-cfg` option generates
+# three files:
+# http://doc.devpi.net/latest/quickstart-server.html
+# http://doc.devpi.net/latest/quickstart-pypimirror.html#permanent-index-configuration-for-pip
+# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pip/pip.conf
+# [global]
+# index_url = http://devpi.ai-traders.com/root/ait/+simple/
+# trusted-host = devpi.ai-traders.com
+# [search]
+# index = http://devpi.ai-traders.com/root/ait/
+# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pydistutils.cfg
+# [easy_install]
+# index_url = http://devpi.ai-traders.com/root/ait/+simple/
+#
+# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.buildout/default.cfg
+# [buildout]
+# index = http://devpi.ai-traders.com/root/ait/+simple/
+#
+# Do not copy ~/.profile from $ide_identity, because it may reference sth not installed in
 # this docker image.
 touch "${ide_home}/.profile"
-echo "cd ${ide_work}" > "${ide_home}/.profile"
+echo "devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/root/ait/
+devpi login --password '' root
+cd ${ide_work}" > "${ide_home}/.profile"

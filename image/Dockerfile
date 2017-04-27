@@ -18,3 +18,5 @@ RUN cd /tmp/virtualenvs_requirements/locust &&\
   . /ide/virtualenvs/locust/bin/activate &&\
   pip install -r requirements.txt
 RUN chown ide:ide -R /ide/virtualenvs
+
+RUN pip install devpi-client==3.0.0

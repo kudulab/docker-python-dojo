@@ -1,17 +1,11 @@
 /test/integration/end_user/test_ide_work/locustfile.pyc
 **/imagerc*
 **/*.html
-**/real_identity/**
-**/identities/real/**
-**/dummy_work/**
-**/test_ide_work/libstc
-**/test_ide_work/*Idefile*
-
-ide/work/bats/
-bats-support/
-bats-assert/
 
 docker-ops
 releaser
 Idefile.to_be_tested_configs
 Idefile.to_be_tested
+example-pythonide2/dist
+example-pythonide2/build
+MANIFEST

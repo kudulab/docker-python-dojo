@@ -1,3 +1,5 @@
+* #10994 add devpi config
+
 ### 0.1.1 (2017-Apr-27)
 
 * dev: no ruby
