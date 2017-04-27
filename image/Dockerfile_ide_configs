@@ -1,13 +1,5 @@
+# TODO: why not FROM python:3.4.1-slim ?
 FROM ubuntu:14.04.5
-
-# Install Tini and verify its keys (both tini and tini.asc must be in the same
-# directory when verifying)
-ENV TINI_VERSION v0.13.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /tini.asc
-RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 \
- && gpg --verify /tini.asc && mv /tini /usr/bin/tini && chmod +x /usr/bin/tini &&\
- rm /tini.asc
 
 # For ide:
 # * entrypoint requires sudo and shadow
@@ -16,13 +8,16 @@ RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 0527A9B7 \
 # fatal: unable to access 'https://github.com/ai-traders/ide.git/': Problem with the SSL CA cert (path? access rights?)
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
-  git clone --depth 1 -b 0.6.0 https://github.com/ai-traders/ide.git /tmp/ide_git && \
+  git clone --depth 1 -b 0.8.2 https://github.com/ai-traders/ide.git /tmp/ide_git && \
   /tmp/ide_git/ide_image_scripts/src/install.sh && \
   rm -r /tmp/ide_git && \
   echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
-COPY etc_ide.d/variables/* /etc/ide.d/variables/
 
-ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/usr/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
+
+ARG this_image_tag
+ARG this_image_name
+ENV this_image_tag=${this_image_tag} this_image_name=${this_image_name}

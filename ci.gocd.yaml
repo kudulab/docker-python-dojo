@@ -19,21 +19,16 @@ pipelines:
                    command: ide
                    arguments:
                     - "bundle install && bundle exec rake go:git:destructive_validate_repo"
-            repocritic:
-              resources:
-                - docker
-                - small
-              tasks:
-                - script: ide "bundle install && bundle exec rake style:repocritic"
             itest_configs:
               resources:
                 - docker
                 - small
               tasks:
                - exec:
-                   command: ide
-                   arguments:
-                    - "bundle install && bundle exec rake build_configs_image && bundle exec rake test_ide_configs"
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - ./tasks build_cfg && ./tasks test_cfg
       - build:
           clean_workspace: true
           jobs:

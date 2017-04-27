@@ -1,0 +1,94 @@
+#!/bin/bash
+
+set -e
+if [[ ! -f ./releaser ]];then
+  wget --quiet http://http.archive.ai-traders.com/releaser/0.4.0/releaser
+fi
+source ./releaser
+if [[ ! -f ./docker-ops ]];then
+  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.1/docker-ops
+fi
+source ./docker-ops
+# This goes as last in order to let end user variables override default values
+releaser_init
+
+image_name="docker-registry.ai-traders.com/python2-ide"
+# since this task may happen directly on workstation/go-agent,
+# let's name the image differently to other temp images
+tmp_image="${image_name}:temp"
+image_dir="./image"
+imagerc_filename="imagerc"
+
+command="$1"
+case "${command}" in
+  bump)
+    # TODO
+    exit $?
+    ;;
+  verify_version)
+      verify_version_not_released
+      exit $?
+      ;;
+  build_cfg)
+      # builds the ide configs image
+      image_name_no_registry="${image_name/docker-registry.ai-traders.com\//}"
+      production_image_tag="$(get_next_version)"
+      cd "${image_dir}"
+      docker build -f Dockerfile_ide_configs -t "${tmp_image}" --build-arg this_image_name=${image_name_no_registry} --build-arg this_image_tag=${production_image_tag} .
+      exit $?
+      ;;
+  test_cfg)
+      # do not use the production ENTRYPOINT
+      echo "IDE_DOCKER_IMAGE=\"${tmp_image}\"" > ./Idefile.to_be_tested_configs
+      echo "IDE_DOCKER_OPTIONS=\"--entrypoint=/bin/bash\"" >> ./Idefile.to_be_tested_configs
+      echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested_configs
+      time bats "$(pwd)/test/integration/configs/bats"
+      exit $?
+      ;;
+  build)
+      ./tasks build_cfg
+      cd "${image_dir}"
+      docker_build "./image" "${imagerc_filename}" "${image_name}" "$2"
+      exit $?
+      ;;
+  build_alpine)
+      source "${version_file}"
+      cd image
+      docker build -f DockerfileAlpine -t ${this_image_name}-alpine:${this_image_tag} --rm .
+      exit $?
+      ;;
+  itest)
+      source "${version_file}"
+      image="${this_image_name}:${this_image_tag}"
+      echo "Testing image: ${image}"
+      echo "IDE_DOCKER_IMAGE=${image}" > Idefile.to_be_tested
+      echo "IDE_IDENTITY=$(pwd)/test/integration/ide_identities/full" >> Idefile.to_be_tested
+      echo "IDE_WORK=$(pwd)/test/integration/ide_work" >> Idefile.to_be_tested
+      echo "IDE_DOCKER_OPTIONS=\"--privileged\"" >> Idefile.to_be_tested
+      time bats "$(pwd)/test/integration/bats"
+      exit $?
+      ;;
+  itest_alpine)
+      source "${version_file}"
+      image="${this_image_name}-alpine:${this_image_tag}"
+      echo "Testing image: ${image}"
+      echo "IDE_DOCKER_IMAGE=${this_image_name}-alpine:${this_image_tag}" > Idefile.to_be_tested
+      echo "IDE_IDENTITY=$(pwd)/test/integration/ide_identities/full" >> Idefile.to_be_tested
+      echo "IDE_WORK=$(pwd)/test/integration/ide_work" >> Idefile.to_be_tested
+      echo "IDE_DOCKER_OPTIONS=\"--privileged\"" >> Idefile.to_be_tested
+      time bats "$(pwd)/test/integration/bats"
+      exit $?
+      ;;
+  release)
+      verify_version_not_released
+      git tag "${this_image_tag}"
+      # push git tag
+      git push origin "${this_image_tag}"
+      exit $?
+      ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e
