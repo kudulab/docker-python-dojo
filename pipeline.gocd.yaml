@@ -5,21 +5,25 @@ pipelines:
     materials:
       git:
         git: "git@git.ai-traders.com:stcdev/docker-python2-ide.git"
-        branch: ci
+        branch: master
     stages:
-      - style_unit:
+      - verify_version:
           clean_workspace: true
           jobs:
-            validate_repo:
+            verify_version:
               resources:
                 - docker
                 - small
               tasks:
                - exec:
-                   command: ide
-                   arguments:
-                    - "bundle install && bundle exec rake go:git:destructive_validate_repo"
-            itest_configs:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - ./tasks verify_version
+      - test_confings_image:
+          clean_workspace: true
+          jobs:
+            test:
               resources:
                 - docker
                 - small
@@ -74,9 +78,10 @@ pipelines:
                 - small
               tasks:
                 - exec:
-                    command: ide
+                    command: /bin/bash
                     arguments:
-                      - "bundle install && bundle exec rake release:code"
+                      - -c
+                      - ./tasks release
       - publish:
           clean_workspace: true
           jobs:
@@ -93,6 +98,7 @@ pipelines:
                     destination: image/
                 # imagerc file is sourced by dockerimagerake
                 - exec:
-                    command: ide
+                    command: /bin/bash
                     arguments:
-                      - "bundle install && bundle exec rake publish:image"
+                      - -c
+                      - ./tasks publish

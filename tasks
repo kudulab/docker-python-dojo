@@ -22,11 +22,11 @@ imagerc_filename="imagerc"
 command="$1"
 case "${command}" in
   bump)
-    # TODO
+    bump_changelog_and_oversion "$2"
     exit $?
     ;;
   verify_version)
-      verify_version_not_released
+      verify_version_no_version_file
       exit $?
       ;;
   build_cfg)
@@ -72,10 +72,14 @@ case "${command}" in
       exit $?
       ;;
   release)
-      verify_version_not_released
-      git tag "${this_image_tag}"
-      # push git tag
-      git push origin "${this_image_tag}"
+      verify_version_no_version_file
+      git_tag_from_oversion
+      exit $?
+      ;;
+  publish)
+      source_imagerc "${image_dir}"  "${imagerc_filename}"
+      production_image_tag="$(get_next_version)"
+      docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
       exit $?
       ;;
   *)

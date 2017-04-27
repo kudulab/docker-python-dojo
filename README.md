@@ -12,7 +12,7 @@ This image has installed:
 1. Install [IDE](https://github.com/ai-traders/ide)
 2. Provide an Idefile:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:0.1.0"
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:0.1.1"
 ```
 
 By default, current directory in docker container is `/ide/work`.
@@ -29,70 +29,30 @@ Those files are used inside the ide docker image:
    order to ensure current directory is `/ide/work`.
 
 ## Development
+### Dependencies
+* Bash
+* Docker daemon
+* Bats
+* Ide
+
+### Tests
 There are 2 Dockerfiles:
   * Dockerfile_ide_configs -- to test IDE configuration files and fail fast
   * Dockerfile -- to build the main ide image, based on image built from
    Dockerfile_ide_configs
 
-### Dependencies
-Bash, IDE, and Docker daemon. Needed is docker IDE image with:
-  * Docker daemon
-  * IDE (we run IDE in IDE; for end user tests)
-  * ruby
-
-All the below tests are supposed to be invoked inside an IDE docker image:
-```bash
-ide
-bundle install
-```
-
-### Fast tests
-```bash
-# Run repocritic linting.
-bundle exec rake style
-
-# Build a docker image with IDE configs only and test it
-bundle exec rake build_configs_image && bundle exec rake test_ide_configs
-```
-
-**OR** you can run those (Test-Kitchen) tests also this way (1 tests suite example):
-```bash
-bundle exec kitchen converge configs-docker
-bundle exec kitchen verify configs-docker
-bundle exec kitchen destroy configs-docker
-```
-
-Here `.kitchen.yml` is used.
-
-
-### Build
-Build docker image. This will generate imagerc file.
-
-```bash
-bundle exec rake build
-```
-
-### Long tests
-Having built the docker image, there are 2 kind of tests available:
-
-```bash
-# Test-Kitchen tests, test that IDE configs are set and that system packages are
-# installed
-bundle exec rake kitchen
-
-
-# RSpec tests invoke ide command using Idefiles and the just built docker
-# image
-bundle exec rake install_ide
-bundle exec rake end_user
-```
-
-**OR** you can run Test-Kitchen tests also this way:
-```bash
-source image/imagerc
-KITCHEN_YAML="/ide/work/.kitchen.image.yml" bundle exec kitchen converge configs
-KITCHEN_YAML="/ide/work/.kitchen.image.yml" bundle exec kitchen verify configs
-KITCHEN_YAML="/ide/work/.kitchen.image.yml" bundle exec kitchen destroy configs
-```
-
-Here `.kitchen.image.yml` is used.
+### Lifecycle
+1. In a feature branch:
+    * you make changes and add some docs to changelog (do not insert date or version)
+    * you build docker image with ide configs: `./tasks build_cfg`
+    * you test docker image with ide configs: `./tasks test_cfg`
+    * you build docker image: `./tasks build`
+    * and test it: `./tasks itest`
+1. You decide that your changes are ready and you:
+    * merge into master branch
+    * run locally:
+      * `./tasks bump` to bump the patch version fragment by 1 OR
+      * e.g. `./tasks bump 1.2.3` to bump to a particular version
+        Version is bumped in Changelog, variables.sh file and OVersion backend
+    * push to master onto private git server
+1. CI server (GoCD) tests and releases.
