@@ -6,6 +6,9 @@ pipelines:
       git:
         git: "git@git.ai-traders.com:stcdev/docker-python2-ide.git"
         branch: master
+        blacklist:
+          - "**/*.gocd.yaml"
+          - "**/*.md"
     stages:
       - verify_version:
           clean_workspace: true
