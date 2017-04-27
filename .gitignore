@@ -1,5 +1,4 @@
 /test/integration/end_user/test_ide_work/locustfile.pyc
-**/.kitchen
 **/imagerc*
 **/*.html
 **/real_identity/**
@@ -12,9 +11,7 @@ ide/work/bats/
 bats-support/
 bats-assert/
 
-# do not ignore those
-!**/dummy_work/.placeholder
-*.png
 docker-ops
 releaser
 Idefile.to_be_tested_configs
+Idefile.to_be_tested

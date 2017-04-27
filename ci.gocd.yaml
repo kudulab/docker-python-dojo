@@ -42,28 +42,13 @@ pipelines:
                     destination:
               tasks:
                - exec:
-                   command: ide
-                   arguments:
-                    - "bundle install && bundle exec rake build_configs_image && bundle exec rake build"
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - ops_docker_push=true ./tasks build
       - itest:
           clean_workspace: true
           jobs:
-            kitchen:
-              resources:
-                - docker
-                - small
-              tasks:
-                - fetch:
-                    stage: build
-                    job: docker_image
-                    is_file: yes
-                    source: imagerc
-                    destination: image/
-                # imagerc file is sourced by dockerimagerake
-                - exec:
-                    command: ide
-                    arguments:
-                      - "bundle install && bundle exec rake kitchen"
             end_user:
               resources:
                 - docker
@@ -75,11 +60,11 @@ pipelines:
                     is_file: yes
                     source: imagerc
                     destination: image/
-                # imagerc file is sourced by dockerimagerake
                 - exec:
-                    command: ide
+                    command: /bin/bash
                     arguments:
-                      - "bundle install && bundle exec rake install_ide && bundle exec rake end_user"
+                      - -c
+                      - ./tasks itest
       - release:
           clean_workspace: true
           jobs:

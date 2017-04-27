@@ -1,4 +1,4 @@
-FROM ide_configs:temp
+FROM docker-registry.ai-traders.com/python2-ide:temp
 
 COPY apt_01proxy /etc/apt/apt.conf.d/01_proxy
 

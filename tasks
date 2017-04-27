@@ -38,45 +38,37 @@ case "${command}" in
       exit $?
       ;;
   test_cfg)
+      echo "Testing image: ${tmp_image}"
       # do not use the production ENTRYPOINT
       echo "IDE_DOCKER_IMAGE=\"${tmp_image}\"" > ./Idefile.to_be_tested_configs
       echo "IDE_DOCKER_OPTIONS=\"--entrypoint=/bin/bash\"" >> ./Idefile.to_be_tested_configs
       echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested_configs
+      echo "IDE_WORK=$(pwd)/test/integration/configs/test_ide_work" >> Idefile.to_be_tested_configs
       time bats "$(pwd)/test/integration/configs/bats"
       exit $?
       ;;
   build)
       ./tasks build_cfg
-      cd "${image_dir}"
+      # pwd is the ${image_dir}
       docker_build "./image" "${imagerc_filename}" "${image_name}" "$2"
       exit $?
       ;;
-  build_alpine)
-      source "${version_file}"
-      cd image
-      docker build -f DockerfileAlpine -t ${this_image_name}-alpine:${this_image_tag} --rm .
-      exit $?
-      ;;
   itest)
-      source "${version_file}"
-      image="${this_image_name}:${this_image_tag}"
-      echo "Testing image: ${image}"
-      echo "IDE_DOCKER_IMAGE=${image}" > Idefile.to_be_tested
-      echo "IDE_IDENTITY=$(pwd)/test/integration/ide_identities/full" >> Idefile.to_be_tested
-      echo "IDE_WORK=$(pwd)/test/integration/ide_work" >> Idefile.to_be_tested
-      echo "IDE_DOCKER_OPTIONS=\"--privileged\"" >> Idefile.to_be_tested
-      time bats "$(pwd)/test/integration/bats"
-      exit $?
-      ;;
-  itest_alpine)
-      source "${version_file}"
-      image="${this_image_name}-alpine:${this_image_tag}"
-      echo "Testing image: ${image}"
-      echo "IDE_DOCKER_IMAGE=${this_image_name}-alpine:${this_image_tag}" > Idefile.to_be_tested
-      echo "IDE_IDENTITY=$(pwd)/test/integration/ide_identities/full" >> Idefile.to_be_tested
-      echo "IDE_WORK=$(pwd)/test/integration/ide_work" >> Idefile.to_be_tested
-      echo "IDE_DOCKER_OPTIONS=\"--privileged\"" >> Idefile.to_be_tested
-      time bats "$(pwd)/test/integration/bats"
+      source "${image_dir}/${imagerc_filename}"
+      if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
+        echo "fail! AIT_DOCKER_IMAGE_NAME not set"
+        return 1
+      fi
+      if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
+        echo "fail! AIT_DOCKER_IMAGE_TAG not set"
+        return 1
+      fi
+      echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
+      # use the production ENTRYPOINT
+      echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Idefile.to_be_tested
+      echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested
+      echo "IDE_WORK=$(pwd)/test/integration/end_user/test_ide_work" >> Idefile.to_be_tested
+      time bats "$(pwd)/test/integration/end_user/bats"
       exit $?
       ;;
   release)
