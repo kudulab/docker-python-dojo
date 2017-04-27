@@ -1,4 +1,6 @@
-* #10994 add devpi config
+* ensure pretty bash prompt like:
+ `ide@9eb0e8c9a0fd(python2-ide):/ide/work$ exit`
+* \#10994 add devpi config
 
 ### 0.1.1 (2017-Apr-27)
 

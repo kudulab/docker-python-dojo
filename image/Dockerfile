@@ -20,3 +20,5 @@ RUN cd /tmp/virtualenvs_requirements/locust &&\
 RUN chown ide:ide -R /ide/virtualenvs
 
 RUN pip install devpi-client==3.0.0
+# ensure pretty bash prompt
+COPY bashrc /home/ide/.bashrc
