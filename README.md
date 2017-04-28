@@ -12,11 +12,50 @@ This image has installed:
 1. Install [IDE](https://github.com/ai-traders/ide)
 2. Provide an Idefile:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:0.1.1"
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:0.2.1"
 ```
 
 By default, current directory in docker container is `/ide/work`.
 
+### Commands
+First run this to **generate an example Idefile** which uses latest released docker image:
+```
+./tasks example
+```
+Then run all the commands in ide docker image:
+```
+ide --idefile Idefile.example
+```
+Thanks to this example environment, we use **pre-generated IDE_WORK directory with example python package** taken from: http://doc.devpi.net/latest/userman/devpi_packages.html
+
+#### List (published) package versions
+```
+devpi list simplejson
+```
+#### Install python package
+```
+source /ide/virtualenvs/locust/bin/activate
+pip install simplejson
+```
+```
+source /ide/virtualenvs/locust/bin/activate
+pip install -r requirements2.txt
+```
+#### Build python package
+```
+cd example-pythonide2
+python setup.py sdist
+```
+#### Upload python package
+```
+cd example-pythonide2
+devpi upload dist/example-pythonide2-1.22.5.tar.gz
+```
+You can upload all the release files from a directory: `devpi upload --from-dir some_package/dist`
+
+#### Other commands
+* [devpi test](http://doc.devpi.net/latest/quickstart-releaseprocess.html#devpi-test-testing-an-uploaded-package)
+* all the [devpi commands](http://doc.devpi.net/latest/userman/devpi_commands.html)
 
 ### Configuration
 Those files are used inside the ide docker image:

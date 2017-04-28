@@ -2,11 +2,13 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 # all the ide scripts are set
+package_name="example-pythonide2"
 
 @test "cleanup" {
-  rm -rf test/integration/end_user/test_ide_work/example-pythonide2/dist
-  rm -rf test/integration/end_user/test_ide_work/example-pythonide2/build
-  rm -f test/integration/end_user/test_ide_work/example-pythonide2/MANIFEST
+  rm -rf test/integration/end_user/test_ide_work/${package_name}/dist
+  rm -rf test/integration/end_user/test_ide_work/${package_name}/build
+  rm -f test/integration/end_user/test_ide_work/${package_name}/MANIFEST
+  /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi remove -y ${package_name}\" || echo 'removal not needed'"
 }
 @test "/usr/bin/entrypoint.sh returns 0" {
   run /bin/bash -c "ide --idefile Idefile.to_be_tested \"pwd && whoami\""
@@ -49,63 +51,59 @@ load '/opt/bats-assert/load.bash'
   assert_equal "$status" 0
 }
 @test "private python package can be published" {
-  # first there is no example-pythonide2 package
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list example-pythonide2\""
+  # first there is no ${package_name} package
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list ${package_name}\""
   # this is printed on test failure
   echo "output: $output"
   assert_line --partial "Not Found"
   assert_equal "$status" 1
 
   # then, we build the package
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"cd example-pythonide2 && devpi logoff && devpi upload\""
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"cd ${package_name} && python setup.py sdist\""
   # this is printed on test failure
   echo "output: $output"
-  assert_line --partial "example-pythonide2-1.22.5.tar.gz"
-  # this fails because we are logoff, but package was built.
-  # We are logoff because we want to do it separately: build and then upload
-  # the package. If we use this command to build: `python setup.py bdist`, then
-  # `devpi upload <file_name>` returns error:
-  # example-pythonide2-1.22.5.linux-x86_64.tar.gz: does not contain PKGINFO, skipping
-  assert_equal "$status" 1
+  assert_line --partial "${package_name}-1.22.5"
+  assert_equal "$status" 0
 
   # then, we upload the package
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"cd example-pythonide2 && devpi upload dist/example-pythonide2-1.22.5.tar.gz\""
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"cd ${package_name} && devpi upload dist/${package_name}-1.22.5.tar.gz\""
   # this is printed on test failure
   echo "output: $output"
-  assert_line --partial "file_upload of example-pythonide2-1.22.5.tar.gz to http://devpi.ai-traders.com/root/ait/"
+  assert_line --partial "file_upload of ${package_name}-1.22.5.tar.gz to http://devpi.ai-traders.com/root/ait/"
   assert_equal "$status" 0
 }
 @test "private python package can be installed from private index" {
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"source /ide/virtualenvs/locust/bin/activate && pip install example-pythonide2\""
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"source /ide/virtualenvs/locust/bin/activate && pip install ${package_name}\""
   # this is printed on test failure
   echo "output: $output"
   assert_line --partial "Downloading http://devpi.ai-traders.com/root/ait"
-  assert_line --partial "Successfully installed example-pythonide2"
+  assert_line --partial "Successfully installed ${package_name}"
   assert_equal "$status" 0
 }
 
 @test "the published private python package can be removed" {
-  # first there is example-pythonide2 package
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list example-pythonide2\""
+  # first there is ${package_name} package
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list ${package_name}\""
   # this is printed on test failure
   echo "output: $output"
   assert_equal "$status" 0
 
   # then we remove the package
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi remove -y example-pythonide2\""
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi remove -y ${package_name}\""
   # this is printed on test failure
   echo "output: $output"
   assert_equal "$status" 0
 
-  # and now the packag does not exist on devpi-server index
-  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list example-pythonide2\""
+  # and now the package does not exist on devpi-server index
+  run /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi list ${package_name}\""
   # this is printed on test failure
   echo "output: $output"
   assert_line --partial "Not Found"
   assert_equal "$status" 1
 }
 @test "cleanup" {
-  rm -rf test/integration/end_user/test_ide_work/example-pythonide2/dist
-  rm -rf test/integration/end_user/test_ide_work/example-pythonide2/build
-  rm -f test/integration/end_user/test_ide_work/example-pythonide2/MANIFEST
+  rm -rf test/integration/end_user/test_ide_work/${package_name}/dist
+  rm -rf test/integration/end_user/test_ide_work/${package_name}/build
+  rm -f test/integration/end_user/test_ide_work/${package_name}/MANIFEST
+  /bin/bash -c "ide --idefile Idefile.to_be_tested \"devpi remove -y ${package_name}\" || echo 'removal not needed'"
 }

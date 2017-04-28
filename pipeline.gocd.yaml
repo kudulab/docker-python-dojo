@@ -99,7 +99,6 @@ pipelines:
                     is_file: yes
                     source: imagerc
                     destination: image/
-                # imagerc file is sourced by dockerimagerake
                 - exec:
                     command: /bin/bash
                     arguments:

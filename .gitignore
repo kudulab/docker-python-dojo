@@ -6,6 +6,11 @@ docker-ops
 releaser
 Idefile.to_be_tested_configs
 Idefile.to_be_tested
+Idefile.example
 example-pythonide2/dist
 example-pythonide2/build
 MANIFEST
+*.egg
+*.egg-info
+*.pyc
+*.tar.gz
