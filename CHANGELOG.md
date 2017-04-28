@@ -1,3 +1,8 @@
+### 0.2.1 (2017-Apr-28)
+
+* updated readme
+* itests: can build and upload python package without redundant complications
+
 ### 0.2.0 (2017-Apr-27)
 
 * ensure pretty bash prompt like:
