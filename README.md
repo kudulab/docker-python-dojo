@@ -5,8 +5,12 @@ Based on [official python image](https://hub.docker.com/_/python/).
 
 ## Specification
 
+There are multiple versions of this image, with python versions:
+ * 2.7
+ * 3.5
+
 This image has installed:
- * python, python-dev, python-pip
+ * python - 2.7 or 3.5
  * virtualenv, tox
 
 It is configured to access our private devpi as caching server and private repository.
