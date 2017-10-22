@@ -1,6 +1,6 @@
-### 0.3.0 - Unreleased
+### 0.3.0 (2017-Oct-22)
 
-Split into several images with many python versions.
+Split into several images with many python versions (2.7, 3.5).
 
 ### 0.2.1 (2017-Apr-28)
 
