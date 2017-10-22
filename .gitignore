@@ -14,3 +14,6 @@ MANIFEST
 *.egg-info
 *.pyc
 *.tar.gz
+/image/Dockerfile.py*
+/test/integration/identities/real/.gitconfig
+/test/integration/identities/real/.ssh/id_rsa

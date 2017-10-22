@@ -1,18 +1,27 @@
 # docker-python2-ide
 
-An IDE docker image with python. Based on ubuntu:14.04.5.
+A set of IDE docker images with python.
+Based on [official python image](https://hub.docker.com/_/python/).
 
 ## Specification
 
 This image has installed:
  * python, python-dev, python-pip
- * virtualenv, tox?
+ * virtualenv, tox
+
+It is configured to access our private devpi as caching server and private repository.
 
 ## Usage
 1. Install [IDE](https://github.com/ai-traders/ide)
 2. Provide an Idefile:
+
+ * For python 2.7:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:0.2.1"
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py27-0.3.0"
+```
+ * For python 3.5:
+```
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py35-0.3.0"
 ```
 
 By default, current directory in docker container is `/ide/work`.

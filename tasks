@@ -2,7 +2,7 @@
 
 set -e
 if [[ ! -f ./releaser ]];then
-  wget --quiet http://http.archive.ai-traders.com/releaser/0.4.0/releaser
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.2/releaser
 fi
 source ./releaser
 if [[ ! -f ./docker-ops ]];then
@@ -12,12 +12,57 @@ source ./docker-ops
 # This goes as last in order to let end user variables override default values
 releaser_init
 
+python27_base="2.7.14"
+python35_base="3.5.4"
+
 image_name="docker-registry.ai-traders.com/python2-ide"
-# since this task may happen directly on workstation/go-agent,
-# let's name the image differently to other temp images
-tmp_image="${image_name}:temp"
+image_name_no_registry="python2-ide"
 image_dir="./image"
-imagerc_filename="imagerc"
+imagerc_basename="imagerc"
+
+function build {
+  prefix=$1
+  base_tag=$2
+  imagerc_filename="$imagerc_basename.$prefix"
+  sed "s/BASE_PY_VERSION/$base_tag/g" $image_dir/Dockerfile.tmpl > $image_dir/Dockerfile.$prefix
+  image_tag=$prefix-$(git rev-parse HEAD)
+  production_image_tag=$prefix-$(get_next_oversion)
+  docker_build_options="--build-arg this_image_name=${image_name_no_registry} --build-arg this_image_tag=${production_image_tag} -f Dockerfile.$prefix"
+  docker_build "./image" "${imagerc_filename}" "${image_name}" "${image_tag}" $docker_build_options
+}
+
+function itest {
+  prefix=$1
+  imagerc_filename="$imagerc_basename.$prefix"
+  set -e
+
+  source "${image_dir}/${imagerc_filename}"
+  if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
+    echo "fail! AIT_DOCKER_IMAGE_NAME not set"
+    return 1
+  fi
+  if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
+    echo "fail! AIT_DOCKER_IMAGE_TAG not set"
+    return 1
+  fi
+  tmp_image="${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
+
+  echo "Testing image configs: ${tmp_image}"
+  # do not use the production ENTRYPOINT
+  echo "IDE_DOCKER_IMAGE=\"${tmp_image}\"" > ./Idefile.to_be_tested_configs
+  echo "IDE_DOCKER_OPTIONS=\"--entrypoint=/bin/bash\"" >> ./Idefile.to_be_tested_configs
+  echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested_configs
+  echo "IDE_WORK=$(pwd)/test/integration/configs/test_ide_work" >> Idefile.to_be_tested_configs
+  time bats "$(pwd)/test/integration/configs/bats"
+
+  echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
+  # use the production ENTRYPOINT
+  echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Idefile.to_be_tested
+  echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested
+  echo "IDE_WORK=$(pwd)/test/integration/end_user/test_ide_work" >> Idefile.to_be_tested
+  time bats "$(pwd)/test/integration/end_user/bats"
+  exit $?
+}
 
 command="$1"
 case "${command}" in
@@ -25,26 +70,17 @@ case "${command}" in
     bump_changelog_and_oversion "$2"
     exit $?
     ;;
+  build_py27)
+    build "py27" $python27_base
+    exit $?
+    ;;
+  itest_py27)
+    itest "py27"
+    exit $?
+    ;;
+  # old ---
   verify_version)
       verify_version_no_version_file
-      exit $?
-      ;;
-  build_cfg)
-      # builds the ide configs image
-      image_name_no_registry="${image_name/docker-registry.ai-traders.com\//}"
-      production_image_tag="$(get_next_version)"
-      cd "${image_dir}"
-      docker build -f Dockerfile_ide_configs -t "${tmp_image}" --build-arg this_image_name=${image_name_no_registry} --build-arg this_image_tag=${production_image_tag} .
-      exit $?
-      ;;
-  test_cfg)
-      echo "Testing image: ${tmp_image}"
-      # do not use the production ENTRYPOINT
-      echo "IDE_DOCKER_IMAGE=\"${tmp_image}\"" > ./Idefile.to_be_tested_configs
-      echo "IDE_DOCKER_OPTIONS=\"--entrypoint=/bin/bash\"" >> ./Idefile.to_be_tested_configs
-      echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested_configs
-      echo "IDE_WORK=$(pwd)/test/integration/configs/test_ide_work" >> Idefile.to_be_tested_configs
-      time bats "$(pwd)/test/integration/configs/bats"
       exit $?
       ;;
   build)
@@ -53,24 +89,7 @@ case "${command}" in
       docker_build "./image" "${imagerc_filename}" "${image_name}" "$2"
       exit $?
       ;;
-  itest)
-      source "${image_dir}/${imagerc_filename}"
-      if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
-        echo "fail! AIT_DOCKER_IMAGE_NAME not set"
-        return 1
-      fi
-      if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
-        echo "fail! AIT_DOCKER_IMAGE_TAG not set"
-        return 1
-      fi
-      echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
-      # use the production ENTRYPOINT
-      echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Idefile.to_be_tested
-      echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested
-      echo "IDE_WORK=$(pwd)/test/integration/end_user/test_ide_work" >> Idefile.to_be_tested
-      time bats "$(pwd)/test/integration/end_user/bats"
-      exit $?
-      ;;
+
   example)
       last_tag=$(get_last_git_tagged_version)
       echo "IDE_DOCKER_IMAGE=\"${image_name}:${last_tag}\"" > ./Idefile.example

@@ -1,0 +1,49 @@
+FROM python:BASE_PY_VERSION-jessie
+
+ENV LANG C.UTF-8
+# For ide:
+# * entrypoint requires sudo and shadow
+# * git is needed to install ide image configs
+# * ca-certificated needed when running git clone
+RUN apt-get update && \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
+  git clone --depth 1 -b 0.8.2 https://github.com/ai-traders/ide.git /tmp/ide_git && \
+  /tmp/ide_git/ide_image_scripts/src/install.sh && \
+  rm -r /tmp/ide_git && \
+  echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
+
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
+
+ARG this_image_tag
+ARG this_image_name
+ENV this_image_tag=${this_image_tag} this_image_name=${this_image_name}
+
+COPY apt_01proxy /etc/apt/apt.conf.d/01_proxy
+
+# * software-properties-common - to make add-apt-repository work
+# * ssh-client - to run git clone over ssh
+# * locale-gen en_US.UTF-8 - so that perl does not complain like: "perl: warning: Setting locale failed."
+RUN apt-get update &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  locales &&\
+  echo 'LANG="en_US.UTF-8"'>/etc/default/locale &&\
+  locale-gen en_US.UTF-8 &&\
+  update-locale LANG=C.UTF-8 &&\
+  dpkg-reconfigure --frontend=noninteractive locales  &&\
+  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+  wget curl \
+  ssh-client build-essential
+RUN pip install virtualenv tox
+COPY virtualenvs_requirements /tmp/virtualenvs_requirements
+RUN cd /tmp/virtualenvs_requirements/locust &&\
+  virtualenv /ide/virtualenvs/locust &&\
+  . /ide/virtualenvs/locust/bin/activate &&\
+  pip install -r requirements.txt
+RUN chown ide:ide -R /ide/virtualenvs
+
+RUN pip install devpi-client==3.0.0
+# ensure pretty bash prompt
+COPY bashrc /home/ide/.bashrc

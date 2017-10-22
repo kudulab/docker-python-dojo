@@ -24,7 +24,7 @@ package_name="example-pythonide2"
   run /bin/bash -c "ide --idefile Idefile.to_be_tested \"python --version\""
   # this is printed on test failure
   echo "output: $output"
-  assert_line --partial "Python 2.7"
+  assert_line --partial "Python"
   assert_equal "$status" 0
 }
 @test "locust runs on command line" {
