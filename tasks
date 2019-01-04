@@ -102,6 +102,14 @@ case "${command}" in
     publish "py35"
     exit $?
     ;;
+  example)
+      source_imagerc "${image_dir}"  "${imagerc_filename}.py35"
+      echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
+      echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Idefile.example
+      echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.example
+      echo "IDE_WORK=$(pwd)/test/integration/end_user/test_ide_work" >> ./Idefile.example
+      ide --idefile ./Idefile.example
+      ;;
   code_release)
     # conditional release
     git fetch origin
