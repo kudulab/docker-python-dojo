@@ -7,19 +7,10 @@ ENV LANG C.UTF-8
 # * ca-certificated needed when running git clone
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
-  git clone --depth 1 -b 0.8.2 https://github.com/ai-traders/ide.git /tmp/ide_git && \
+  git clone --depth 1 -b 0.10.5 https://github.com/ai-traders/ide.git /tmp/ide_git && \
   /tmp/ide_git/ide_image_scripts/src/install.sh && \
   rm -r /tmp/ide_git && \
   echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-
-COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
-
-ENTRYPOINT ["/usr/bin/entrypoint.sh"]
-CMD ["/bin/bash"]
-
-ARG this_image_tag
-ARG this_image_name
-ENV this_image_tag=${this_image_tag} this_image_name=${this_image_name}
 
 COPY apt_01proxy /etc/apt/apt.conf.d/01_proxy
 
@@ -47,3 +38,12 @@ RUN chown ide:ide -R /ide/virtualenvs
 RUN pip install devpi-client==3.0.0
 # ensure pretty bash prompt
 COPY bashrc /home/ide/.bashrc
+
+COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
+
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
+
+ARG this_image_tag_arg
+ARG this_image_name_arg
+ENV this_image_tag=${this_image_tag_arg} this_image_name=${this_image_name_arg}
