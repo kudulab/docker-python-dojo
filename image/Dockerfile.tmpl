@@ -38,6 +38,8 @@ RUN chown ide:ide -R /ide/virtualenvs
 RUN pip install devpi-client==3.0.0
 # ensure pretty bash prompt
 COPY bashrc /home/ide/.bashrc
+COPY profile /home/ide/.profile
+RUN chown ide:ide -R /home/ide
 
 COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
 
