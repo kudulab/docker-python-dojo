@@ -1,24 +1,7 @@
 #!/bin/bash
 
-# 1. Ensure that after bash login pwd is /ide/work
-# 2. Specify which devpi-server index to use. The `--set-cfg` option generates
-# three files:
-# http://doc.devpi.net/latest/quickstart-server.html
-# http://doc.devpi.net/latest/quickstart-pypimirror.html#permanent-index-configuration-for-pip
-# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pip/pip.conf
-# [global]
-# index_url = http://devpi.ai-traders.com/root/ait/+simple/
-# trusted-host = devpi.ai-traders.com
-# [search]
-# index = http://devpi.ai-traders.com/root/ait/
-# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pydistutils.cfg
-# [easy_install]
-# index_url = http://devpi.ai-traders.com/root/ait/+simple/
-#
-# (locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.buildout/default.cfg
-# [buildout]
-# index = http://devpi.ai-traders.com/root/ait/+simple/
-
+# Specify which devpi-server index to use (more details in readme of the git project)
 devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/root/ait/
 devpi login --password '' root
+# Ensure that after bash login pwd is /ide/work
 cd ${ide_work}

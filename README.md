@@ -83,6 +83,27 @@ Those files are used inside the ide docker image:
 * Bats
 * Ide
 
+### Specifying which devpi-server index to use.
+We run: `devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/root/ait/`.
+ The `--set-cfg` option generates three files:
+```
+http://doc.devpi.net/latest/quickstart-server.html
+http://doc.devpi.net/latest/quickstart-pypimirror.html#permanent-index-configuration-for-pip
+(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pip/pip.conf
+[global]
+index_url = http://devpi.ai-traders.com/root/ait/+simple/
+trusted-host = devpi.ai-traders.com
+[search]
+index = http://devpi.ai-traders.com/root/ait/
+(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pydistutils.cfg
+[easy_install]
+index_url = http://devpi.ai-traders.com/root/ait/+simple/
+
+(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.buildout/default.cfg
+[buildout]
+index = http://devpi.ai-traders.com/root/ait/+simple/
+```
+
 ### Lifecycle
 1. In a feature branch:
     * you make changes and add some docs to changelog (do not insert date or version)
