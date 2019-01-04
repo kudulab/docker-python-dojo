@@ -33,19 +33,8 @@ function build {
 
 function itest {
   prefix=$1
-  imagerc_filename="$imagerc_basename.$prefix"
   set -e
-
-  source "${image_dir}/${imagerc_filename}"
-  if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
-    echo "fail! AIT_DOCKER_IMAGE_NAME not set"
-    return 1
-  fi
-  if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
-    echo "fail! AIT_DOCKER_IMAGE_TAG not set"
-    return 1
-  fi
-
+  source_imagerc "${image_dir}"  "${imagerc_basename}.${prefix}"
   echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
   # use the production ENTRYPOINT
   echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Idefile.to_be_tested

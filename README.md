@@ -21,25 +21,21 @@ It is configured to access our private devpi as caching server and private repos
 
  * For python 2.7:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py27-0.3.0"
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py27-0.3.1"
 ```
  * For python 3.5:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py35-0.3.0"
+IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py35-0.3.1"
 ```
 
 By default, current directory in docker container is `/ide/work`.
 
 ### Commands
-First run this to **generate an example Idefile** which uses latest released docker image:
+Run this to **generate an example Idefile and to run ide**:
 ```
 ./tasks example
 ```
-Then run all the commands in ide docker image:
-```
-ide --idefile Idefile.example
-```
-Thanks to this example environment, we use **pre-generated IDE_WORK directory with example python package** taken from: http://doc.devpi.net/latest/userman/devpi_packages.html
+In this example environment, we use **pre-generated IDE_WORK directory with example python package** taken from: http://doc.devpi.net/latest/userman/devpi_packages.html
 
 #### List (published) package versions
 ```
@@ -87,19 +83,11 @@ Those files are used inside the ide docker image:
 * Bats
 * Ide
 
-### Tests
-There are 2 Dockerfiles:
-  * Dockerfile_ide_configs -- to test IDE configuration files and fail fast
-  * Dockerfile -- to build the main ide image, based on image built from
-   Dockerfile_ide_configs
-
 ### Lifecycle
 1. In a feature branch:
     * you make changes and add some docs to changelog (do not insert date or version)
-    * you build docker image with ide configs: `./tasks build_cfg`
-    * you test docker image with ide configs: `./tasks test_cfg`
-    * you build docker image: `./tasks build`
-    * and test it: `./tasks itest`
+    * you build docker image: `./tasks build_py35`
+    * and test it: `./tasks itest_py35`
 1. You decide that your changes are ready and you:
     * merge into master branch
     * run locally:
