@@ -1,3 +1,5 @@
+* reproducible builds - build docker image using last version from changelog
+
 ### 0.3.0 (2017-Oct-22)
 
 Split into several images with many python versions (2.7, 3.5).
