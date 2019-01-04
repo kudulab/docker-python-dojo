@@ -45,15 +45,6 @@ function itest {
     echo "fail! AIT_DOCKER_IMAGE_TAG not set"
     return 1
   fi
-  tmp_image="${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
-
-  echo "Testing image configs: ${tmp_image}"
-  # do not use the production ENTRYPOINT
-  echo "IDE_DOCKER_IMAGE=\"${tmp_image}\"" > ./Idefile.to_be_tested_configs
-  echo "IDE_DOCKER_OPTIONS=\"--entrypoint=/bin/bash\"" >> ./Idefile.to_be_tested_configs
-  echo "IDE_IDENTITY=\"$(pwd)/test/integration/identities/full\"" >> ./Idefile.to_be_tested_configs
-  echo "IDE_WORK=$(pwd)/test/integration/configs/test_ide_work" >> Idefile.to_be_tested_configs
-  time bats "$(pwd)/test/integration/configs/bats"
 
   echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
   # use the production ENTRYPOINT
