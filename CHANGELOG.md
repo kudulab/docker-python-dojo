@@ -3,6 +3,7 @@
 * reproducible builds - build docker image using last version from changelog
 * better order of Dockerfile directives (fast to do as last ones)
 * remove configs tests (itests are enough)
+* pin locustio version or else itests fail
 
 ### 0.3.0 (2017-Oct-22)
 

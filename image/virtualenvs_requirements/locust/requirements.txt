@@ -1,3 +1,3 @@
-locustio
+locustio==0.8.1
 requests
 requests_toolbelt
