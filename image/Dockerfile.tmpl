@@ -14,6 +14,9 @@ RUN apt-get update && \
 
 COPY apt_01proxy /etc/apt/apt.conf.d/01_proxy
 
+COPY ./ca.crt /usr/local/share/ca-certificates/ait.crt
+RUN update-ca-certificates
+
 # * software-properties-common - to make add-apt-repository work
 # * ssh-client - to run git clone over ssh
 # * locale-gen en_US.UTF-8 - so that perl does not complain like: "perl: warning: Setting locale failed."

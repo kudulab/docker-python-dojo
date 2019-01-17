@@ -54,10 +54,17 @@ function publish {
 
 command="$1"
 case "${command}" in
-  bump)
-    bump_changelog_and_oversion "$2"
-    exit $?
-    ;;
+  set_version)
+      if [[ -n "$2" ]]; then
+        next_version="$2"
+        set_version_in_changelog "${changelog_file}" "${next_version}"
+        set_next_oversion "${next_version}"
+      else
+        next_version=$(get_next_oversion)
+        set_version_in_changelog "${changelog_file}" "${next_version}"
+      fi
+      exit $?
+      ;;
   build_py27)
     build "py27" $python27_base
     exit $?

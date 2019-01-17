@@ -1,3 +1,7 @@
+### 0.3.2 (2019-Jan-17)
+
+* added ait CA cert
+
 ### 0.3.1 (2019-Jan-04)
 
 * reproducible builds - build docker image using last version from changelog
