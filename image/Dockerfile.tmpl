@@ -1,16 +1,16 @@
 FROM python:BASE_PY_VERSION-jessie
 
 ENV LANG C.UTF-8
-# For ide:
+# For Dojo:
 # * entrypoint requires sudo and shadow
-# * git is needed to install ide image configs
+# * git is needed to install dojo image configs
 # * ca-certificated needed when running git clone
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sudo git ca-certificates && \
-  git clone --depth 1 -b 0.10.5 https://github.com/ai-traders/ide.git /tmp/ide_git && \
-  /tmp/ide_git/ide_image_scripts/src/install.sh && \
-  rm -r /tmp/ide_git && \
-  echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+  git clone --depth 1 -b 0.2.1 https://github.com/ai-traders/dojo.git /tmp/dojo_git &&\
+  /tmp/dojo_git/image_scripts/src/install.sh && \
+  rm -r /tmp/dojo_git && \
+  echo 'dojo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 COPY apt_01proxy /etc/apt/apt.conf.d/01_proxy
 
@@ -33,18 +33,18 @@ RUN apt-get update &&\
 RUN pip install virtualenv tox
 COPY virtualenvs_requirements /tmp/virtualenvs_requirements
 RUN cd /tmp/virtualenvs_requirements/locust &&\
-  virtualenv /ide/virtualenvs/locust &&\
-  . /ide/virtualenvs/locust/bin/activate &&\
+  virtualenv /dojo/virtualenvs/locust &&\
+  . /dojo/virtualenvs/locust/bin/activate &&\
   pip install -r requirements.txt
-RUN chown ide:ide -R /ide/virtualenvs
+RUN chown dojo:dojo -R /dojo/virtualenvs
 
 RUN pip install devpi-client==3.0.0
 # ensure pretty bash prompt
-COPY bashrc /home/ide/.bashrc
-COPY profile /home/ide/.profile
-RUN chown ide:ide -R /home/ide
+COPY bashrc /home/dojo/.bashrc
+COPY profile /home/dojo/.profile
+RUN chown dojo:dojo -R /home/dojo
 
-COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
+COPY etc_dojo.d/scripts/* /etc/dojo.d/scripts/
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]

@@ -3,5 +3,5 @@
 # Specify which devpi-server index to use (more details in readme of the git project)
 devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/root/ait/
 devpi login --password '' root
-# Ensure that after bash login pwd is /ide/work
-cd ${ide_work}
+# Ensure that after bash login pwd is /dojo/work
+cd ${dojo_work}

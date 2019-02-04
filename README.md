@@ -1,6 +1,6 @@
 # docker-python2-ide
 
-A set of IDE docker images with python.
+A set of Dojo docker images with python.
 Based on [official python image](https://hub.docker.com/_/python/).
 
 ## Specification
@@ -16,26 +16,25 @@ This image has installed:
 It is configured to access our private devpi as caching server and private repository.
 
 ## Usage
-1. Install [IDE](https://github.com/ai-traders/ide)
-2. Provide an Idefile:
+Provide an Dojofile:
 
  * For python 2.7:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py27-0.3.1"
+DOJO_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py27-0.3.1"
 ```
  * For python 3.5:
 ```
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py35-0.3.1"
+DOJO_DOCKER_IMAGE="docker-registry.ai-traders.com/python2-ide:py35-0.3.1"
 ```
 
-By default, current directory in docker container is `/ide/work`.
+By default, current directory in docker container is `/dojo/work`.
 
 ### Commands
-Run this to **generate an example Idefile and to run ide**:
+Run this to **generate an example Dojofile and to run dojo**:
 ```
 ./tasks example
 ```
-In this example environment, we use **pre-generated IDE_WORK directory with example python package** taken from: http://doc.devpi.net/latest/userman/devpi_packages.html
+In this example environment, we use **pre-generated DOJO_WORK_OUTER directory with example python package** taken from: http://doc.devpi.net/latest/userman/devpi_packages.html
 
 #### List (published) package versions
 ```
@@ -43,11 +42,11 @@ devpi list simplejson
 ```
 #### Install python package
 ```
-source /ide/virtualenvs/locust/bin/activate
+source /dojo/virtualenvs/locust/bin/activate
 pip install simplejson
 ```
 ```
-source /ide/virtualenvs/locust/bin/activate
+source /dojo/virtualenvs/locust/bin/activate
 pip install -r requirements2.txt
 ```
 #### Build python package
@@ -67,21 +66,21 @@ You can upload all the release files from a directory: `devpi upload --from-dir 
 * all the [devpi commands](http://doc.devpi.net/latest/userman/devpi_commands.html)
 
 ### Configuration
-Those files are used inside the ide docker image:
+Those files are used inside the dojo docker image:
 
 1. `~/.ssh/config` -- will be generated on docker container start
 2. `~/.ssh/id_rsa` -- it must exist locally, because it is a secret
  (but the whole `~/.ssh` will be copied)
 2. `~/.gitconfig` -- if exists locally, will be copied
 3. `~/.profile` -- will be generated on docker container start, in
-   order to ensure current directory is `/ide/work`.
+   order to ensure current directory is `/dojo/work`.
 
 ## Development
 ### Dependencies
 * Bash
 * Docker daemon
 * Bats
-* Ide
+* [Dojo](https://github.com/ai-traders/dojo)
 
 ### Specifying which devpi-server index to use.
 We run: `devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/root/ait/`.
@@ -89,17 +88,17 @@ We run: `devpi use --set-cfg --pip-set-trusted=yes http://devpi.ai-traders.com/r
 ```
 http://doc.devpi.net/latest/quickstart-server.html
 http://doc.devpi.net/latest/quickstart-pypimirror.html#permanent-index-configuration-for-pip
-(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pip/pip.conf
+(locust) dojo@ffa4af8f1c30:/dojo/work$ cat ~/.pip/pip.conf
 [global]
 index_url = http://devpi.ai-traders.com/root/ait/+simple/
 trusted-host = devpi.ai-traders.com
 [search]
 index = http://devpi.ai-traders.com/root/ait/
-(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.pydistutils.cfg
+(locust) dojo@ffa4af8f1c30:/dojo/work$ cat ~/.pydistutils.cfg
 [easy_install]
 index_url = http://devpi.ai-traders.com/root/ait/+simple/
 
-(locust) ide@ffa4af8f1c30:/ide/work$ cat ~/.buildout/default.cfg
+(locust) dojo@ffa4af8f1c30:/dojo/work$ cat ~/.buildout/default.cfg
 [buildout]
 index = http://devpi.ai-traders.com/root/ait/+simple/
 ```
