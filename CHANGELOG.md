@@ -1,4 +1,7 @@
+* newer releaser and docker-ops
+* do not use oversion
 * transform from ide docker image to dojo docker image #17139
+
 ### 0.3.2 (2019-Jan-17)
 
 * added ait CA cert

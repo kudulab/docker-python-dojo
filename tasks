@@ -1,55 +1,52 @@
 #!/bin/bash
 
 set -e
-if [[ ! -f ./releaser ]];then
-  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser
+if [[ ! -f ./releaser ]]; then
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.1.0/releaser || { echo "Cannot download releaser, ignoring."; }
 fi
-source ./releaser
-if [[ ! -f ./docker-ops ]];then
-  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.1/docker-ops
+if [[ -f ./releaser ]]; then
+  source ./releaser
 fi
-source ./docker-ops
-# This goes as last in order to let end user variables override default values
-releaser_init
+if [[ ! -f ./docker-ops ]]; then
+  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.3.3/docker-ops || { echo "Cannot download docker-ops, ignoring."; }
+fi
+if [[ -f ./docker-ops ]]; then
+  source ./docker-ops
+fi
+
+image_name="python2-ide"
+image_dir="./image"
+imagerc_basename="imagerc"
+image_registry="docker-registry.ai-traders.com"
 
 python27_base="2.7.14"
 python35_base="3.5.4"
 
-image_name="docker-registry.ai-traders.com/python2-ide"
-image_name_no_registry="python2-ide"
-image_dir="./image"
-imagerc_basename="imagerc"
-
 function build {
   prefix=$1
   base_tag=$2
-  imagerc_filename="$imagerc_basename.$prefix"
   sed "s/BASE_PY_VERSION/$base_tag/g" $image_dir/Dockerfile.tmpl > $image_dir/Dockerfile.$prefix
   image_tag=$prefix-$(git rev-parse HEAD)
-  production_image_tag="$prefix-$(get_last_version_from_changelog "${changelog_file}")"
-  docker_build_options="--build-arg this_image_name_arg=${image_name_no_registry} --build-arg this_image_tag_arg=${production_image_tag} -f Dockerfile.$prefix"
-  docker_build "./image" "${imagerc_filename}" "${image_name}" "${image_tag}" $docker_build_options
+  ( set -x; cd "${image_dir}"; docker build -f Dockerfile.$prefix -t "${image_name}:${image_tag}" .; )
+  docker_ops::create_imagerc "${image_dir}" "${imagerc_basename}.${prefix}" "${image_name}" "${image_tag}" "${image_registry}"
+  docker_ops::push_tmp "${image_name}" "${image_tag}" "${image_registry}"
 }
 
 function itest {
   prefix=$1
   set -e
-  source_imagerc "${image_dir}"  "${imagerc_basename}.${prefix}"
-  echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
-  # use the production ENTRYPOINT
-  echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Dojofile.to_be_tested
+  docker_ops::ensure_temp_image "${image_dir}" "${imagerc_basename}.${prefix}"
+  echo "Testing image: ${AIT_DOCKER_IMAGE_URL}"
+  echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_URL}\"" > ./Dojofile.to_be_tested
   echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.to_be_tested
-  echo "DOJO_WORK_OUTER=$(pwd)/test/integration/end_user/test_dojo_work" >> Dojofile.to_be_tested
+  echo "DOJO_WORK_OUTER=$(pwd)/test/integration/end_user/test_dojo_work" >> ./Dojofile.to_be_tested
   time bats "$(pwd)/test/integration/end_user/bats"
-  exit $?
 }
 
 function publish {
   prefix=$1
-  imagerc_filename="$imagerc_basename.$prefix"
-  source_imagerc "${image_dir}"  "${imagerc_filename}"
   production_image_tag=$prefix-$(get_last_version_from_changelog "${changelog_file}")
-  docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
+  docker_ops::push_production "${image_dir}" "${imagerc_basename}.${prefix}" "${image_name}" "${production_image_tag}" "${image_registry}"
 }
 
 command="$1"
@@ -57,40 +54,39 @@ case "${command}" in
   set_version)
       if [[ -n "$2" ]]; then
         next_version="$2"
-        set_version_in_changelog "${changelog_file}" "${next_version}"
-        set_next_oversion "${next_version}"
       else
-        next_version=$(get_next_oversion)
-        set_version_in_changelog "${changelog_file}" "${next_version}"
+        version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
+        next_version=$(releaser::bump_patch_version "${version}")
       fi
+      releaser::set_version_in_changelog "${changelog_file}" "${next_version}"
       exit $?
       ;;
   build_py27)
-    build "py27" $python27_base
-    exit $?
-    ;;
+      build "py27" $python27_base
+      exit $?
+      ;;
   itest_py27)
-    itest "py27"
-    exit $?
-    ;;
+      itest "py27"
+      exit $?
+      ;;
   build_py35)
-    build "py35" $python35_base
-    exit $?
-    ;;
+      build "py35" $python35_base
+      exit $?
+      ;;
   itest_py35)
-    itest "py35"
-    exit $?
-    ;;
+      itest "py35"
+      exit $?
+      ;;
   publish_py27)
-    publish "py27"
-    exit $?
-    ;;
+      publish "py27"
+      exit $?
+      ;;
   publish_py35)
-    publish "py35"
-    exit $?
-    ;;
+      publish "py35"
+      exit $?
+      ;;
   example)
-      source_imagerc "${image_dir}"  "${imagerc_filename}.py35"
+      docker_ops::source_imagerc "${image_dir}"  "${imagerc_basename}.py35"
       echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
       echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > ./Dojofile.example
       echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.example
@@ -98,23 +94,15 @@ case "${command}" in
       dojo -c ./Dojofile.example
       ;;
   code_release)
-    # conditional release
-    git fetch origin
-    version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
-    validate_version_is_semver "${version_from_changelog}"
-    next_version="$(bump_patch_version ${version_from_changelog})"
-    verify_version_for_release
-    git tag "${version_from_changelog}" && git push origin "${version_from_changelog}"
-    # set it in Consul
-    set_next_oversion "${next_version}"
-    exit $?
-    ;;
+      ./tasks verify_version
+      version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
+      git tag "${version}" && git push origin "${version}"
+      exit $?
+      ;;
   verify_version)
-    git fetch origin
-    verify_version_in_changelog_matches_in_oversion
-    verify_version_not_released_before
-    exit $?
-    ;;
+      releaser::verify_changelog_version
+      exit $?
+      ;;
   *)
       echo "Invalid command: '${command}'"
       exit 1
