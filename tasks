@@ -93,6 +93,11 @@ case "${command}" in
       ./tasks build_local_py3
       docker_ops::push "${image_dir}" "imagerc.py3"
       ;;
+  itest)
+      ./tasks itest_py2
+      ./tasks itest_py3
+      exit $?
+      ;;
   itest_py2)
       itest "py2"
       exit $?
