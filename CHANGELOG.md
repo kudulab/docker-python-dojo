@@ -1,3 +1,8 @@
+* make it a public image (remove AIT related functionality)
+* new base images: 2.7.16-slim-stretch and 3.7.3-slim-stretch
+* support devpi server thanks to the environment variables:
+  KUDU_DEVPI_INDEX, KUDU_DEVPI_LOGIN, KUDU_DEVPI_PASSWORD
+
 ### 0.4.0 (2019-Feb-04)
 
 * newer releaser and docker-ops

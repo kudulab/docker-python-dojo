@@ -2,10 +2,8 @@
 **/imagerc*
 **/*.html
 
-docker-ops
-releaser
-Dojofile.to_be_tested_configs
-Dojofile.to_be_tested
+ops
+Dojofile.to_be_tested*
 Dojofile.example
 example-pythonide2/dist
 example-pythonide2/build
