@@ -1,3 +1,5 @@
+### 1.0.0 (2019-Jun-25)
+
 * make it a public image (remove AIT related functionality)
 * new base images: 2.7.16-slim-stretch and 3.7.3-slim-stretch
 * support devpi server thanks to the environment variables:
