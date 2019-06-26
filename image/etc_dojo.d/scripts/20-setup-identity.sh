@@ -12,11 +12,14 @@ else
   find ${dojo_home}/.ssh -name '*id_rsa*' -exec chmod -c 0600 {} \;
   find ${dojo_home}/.ssh -name '*id_rsa*' -exec chown dojo:dojo {} \;
 fi
+chown dojo:dojo ${dojo_home}/.ssh
+chmod 0700 ${dojo_home}/.ssh
 
 echo "StrictHostKeyChecking no
 UserKnownHostsFile /dev/null
 " > "${dojo_home}/.ssh/config"
+chown dojo:dojo "${dojo_home}/.ssh/config"
 
 if [ -f "${dojo_identity}/.gitconfig" ]; then
-  cp "${dojo_identity}/.gitconfig" "${dojo_home}"
+  cp -p "${dojo_identity}/.gitconfig" "${dojo_home}"
 fi

@@ -7,7 +7,13 @@ load '/opt/bats-assert/load.bash'
   echo "output: $output"
   assert_line --partial "dojo init finished"
   assert_line --partial "/dojo/work"
-  refute_output "root"
+  refute_output --partial "root"
+  assert_equal "$status" 0
+}
+@test "files copied from /dojo/identity have proper owner" {
+  run /bin/bash -c "dojo -c Dojofile.to_be_tested \"stat -c %U ~/.ssh/ && stat -c %U ~/.ssh/id_rsa && stat -c %U ~/.gitconfig\""
+  assert_line --partial "dojo"
+  refute_output --partial "root"
   assert_equal "$status" 0
 }
 @test "git is installed" {

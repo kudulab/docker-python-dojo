@@ -1,3 +1,5 @@
+* fix ownership of ~/.ssh and ~/.gitconfig files
+
 ### 1.0.0 (2019-Jun-25)
 
 * make it a public image (remove AIT related functionality)
