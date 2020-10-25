@@ -8,7 +8,7 @@ RUN apt-get update && \
   rm -r /tmp/dojo_git && \
   echo 'dojo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-RUN pip install virtualenv tox devpi-client==4.4.0
+RUN pip install virtualenv tox devpi-client==5.2.1
 
 # ensure pretty bash prompt
 COPY bashrc /home/dojo/.bashrc

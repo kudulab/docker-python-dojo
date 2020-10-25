@@ -1,6 +1,7 @@
 ### 1.0.2 (2020-Oct-25)
 
 * use dojo 0.10.2 docker image scripts, to make it work on Mac using FUSE docker volume driver
+* install newer devpi-client 5.2.1, was 4.4.0
 
 ### 1.0.1 (2019-Jun-28)
 
