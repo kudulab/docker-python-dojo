@@ -1,3 +1,7 @@
+### 1.0.2 (2020-Oct-25)
+
+* use dojo 0.10.2 docker image scripts, to make it work on Mac using FUSE docker volume driver
+
 ### 1.0.1 (2019-Jun-28)
 
 * fix ownership of ~/.ssh and ~/.gitconfig files
