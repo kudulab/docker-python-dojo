@@ -1,14 +1,14 @@
-FROM python:{{BASE_PY_VERSION}}
+FROM python:3.13.0a3-slim-bookworm
 
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   sudo git ca-certificates wget && \
-  git clone --depth 1 -b 0.10.2 https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
+  git clone --depth 1 -b 0.11.0 https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
   /tmp/dojo_git/image_scripts/src/install.sh && \
   rm -r /tmp/dojo_git && \
   echo 'dojo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-RUN pip install virtualenv tox devpi-client==5.2.1
+RUN pip install virtualenv tox devpi-client==7.0.2
 
 # ensure pretty bash prompt
 COPY bashrc /home/dojo/.bashrc
