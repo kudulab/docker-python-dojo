@@ -1,3 +1,5 @@
+### 2.0.1 (2024-Jan-31)
+
 ### 2.0.0 (2024-Jan-30)
 
 * drop support for python2 (breaking change)
