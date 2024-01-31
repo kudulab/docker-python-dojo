@@ -11,8 +11,6 @@ SECRET_OPS_TAR_FILE="ops/secret-ops-${SECRET_OPS_VERSION}.tar.gz"
 RELEASER_FILE="ops/releaser-${RELEASER_VERSION}"
 DOCKER_OPS_FILE="ops/docker-ops-${DOCKER_OPS_VERSION}"
 
-VAULT_ADDR="https://vault.kudulab.io:8200"
-
 mkdir -p ops
 if [[ ! -f $RELEASER_FILE ]];then
   wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
@@ -31,27 +29,20 @@ source $SECRET_OPS_FILE
 image_name="kudulab/python-dojo"
 image_registry="dockerhub"
 image_dir="./image"
-python2_base="2.7.16-slim-stretch"
-python3_base="3.7.3-slim-stretch"
+imagerc_filename="imagerc"
 
 function docker_login {
+  if [ -n "$DOCKERHUB_TOKEN" ]; then
+    echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    return
+  fi
+  echo "Warning: docker environment variables not found: falling back to Vault for authentication." >&2
   vault_user_path=$USER
   if [ $vault_user_path == "go" ]; then
     vault_user_path="gocd"
   fi
   dockerhub_user=$(vault read -field=user secret/$vault_user_path/dockerhub)
   vault read -field=password secret/$vault_user_path/dockerhub | docker login --username $dockerhub_user --password-stdin
-}
-
-function itest {
-  prefix=$1
-  set -e
-  docker_ops::source_imagerc "${image_dir}" "imagerc.${prefix}"
-  echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
-  echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > ./Dojofile.to_be_tested
-  echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.to_be_tested
-  echo "DOJO_WORK_OUTER=$(pwd)/test/integration/end_user/test_dojo_work" >> ./Dojofile.to_be_tested
-  time bats "$(pwd)/test/integration/end_user/bats"
 }
 
 command="$1"
@@ -64,50 +55,24 @@ case "${command}" in
   verify_version)
       releaser::verify_release_ready
       ;;
-  build_local_py2)
-      prefix="py2"
-      base_tag="${python2_base}"
-      imagerc_filename="imagerc.${prefix}"
-
-      image_tag="${prefix}-$(git rev-parse HEAD)"
-      sed "s/{{BASE_PY_VERSION}}/${base_tag}/g" $image_dir/Dockerfile.tmpl > $image_dir/Dockerfile.${prefix}
-      docker_build_options="-f Dockerfile.${prefix}"
-      image_tag=$(git rev-parse HEAD)
-      docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${prefix}-${image_tag}" "${image_registry}"
-      ;;
-  build_local_py3)
-      prefix="py3"
-      base_tag="${python3_base}"
-      imagerc_filename="imagerc.${prefix}"
-
-      image_tag="${prefix}-$(git rev-parse HEAD)"
-      sed "s/{{BASE_PY_VERSION}}/${base_tag}/g" $image_dir/Dockerfile.tmpl > $image_dir/Dockerfile.${prefix}
-      docker_build_options="-f Dockerfile.${prefix}"
-      image_tag=$(git rev-parse HEAD)
-      docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${prefix}-${image_tag}" "${image_registry}"
-      ;;
   build)
+      image_tag=$(git rev-parse HEAD)
+      docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+      ;;
+  push)
       docker_login
-      ./tasks build_local_py2
-      docker_ops::push "${image_dir}" "imagerc.py2"
-      ./tasks build_local_py3
-      docker_ops::push "${image_dir}" "imagerc.py3"
+      docker_ops::push "${image_dir}" "${imagerc_filename}"
       ;;
   itest)
-      ./tasks itest_py2
-      ./tasks itest_py3
-      exit $?
-      ;;
-  itest_py2)
-      itest "py2"
-      exit $?
-      ;;
-  itest_py3)
-      itest "py3"
-      exit $?
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
+      echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
+      echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > ./Dojofile.to_be_tested
+      echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.to_be_tested
+      echo "DOJO_WORK_OUTER=$(pwd)/test/integration/end_user/test_dojo_work" >> ./Dojofile.to_be_tested
+      time bats "$(pwd)/test/integration/end_user/bats"
       ;;
   example)
-      docker_ops::ensure_pulled_image "${image_dir}"  "imagerc.py3"
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
       echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
       echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > ./Dojofile.example
       echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.example
@@ -116,18 +81,13 @@ case "${command}" in
       ;;
   release)
       ./tasks verify_version
-      version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
-      git tag "${version}" && git push origin "${version}"
+      releaser::git_tag_from_changelog
       ;;
   publish)
       docker_login
       version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
-
-      docker_ops::ensure_pulled_image "${image_dir}" "imagerc.py2"
-      docker_ops::retag_push "${image_dir}"  "imagerc.py2" "${image_name}" "py2-${version}" "${image_registry}"
-
-      docker_ops::ensure_pulled_image "${image_dir}" "imagerc.py3"
-      docker_ops::retag_push "${image_dir}"  "imagerc.py3" "${image_name}" "py3-${version}" "${image_registry}"
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
+      docker_ops::retag_push "${image_dir}"  "${imagerc_filename}" "${image_name}" "${version}" "${image_registry}"
       ;;
   generate_vault_token)
       vault_token=$(vault token create -orphan -ttl=168h -policy=gocd -field token -metadata gocd_renew=true)

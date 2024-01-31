@@ -1,3 +1,9 @@
+### 2.0.0 (2024-Jan-30)
+
+* drop support for python2 (breaking change)
+* bump python3 to 3.13
+* refresh ops scripts (tasks)
+
 ### 1.0.2 (2020-Oct-25)
 
 * use dojo 0.10.2 docker image scripts, to make it work on Mac using FUSE docker volume driver
