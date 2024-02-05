@@ -1,7 +1,11 @@
-### 2.0.1 (2024-Jan-31)
+### 2.0.2 (2024-Feb-06)
 
 * use Dojo image scripts 0.13.0
 * limit output from this image init scripts
+
+### 2.0.1 (2024-Jan-31)
+
+* ops: update ssh key on cicd
 
 ### 2.0.0 (2024-Jan-30)
 
