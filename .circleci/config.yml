@@ -7,10 +7,12 @@ workflows:
   docker-python-dojo:
     jobs:
       - build
+      - build_mac
       - verify_version
       - itest:
           requires:
             - build
+            - build_mac
       - release:
           requires:
             - itest
@@ -25,6 +27,18 @@ workflows:
 jobs:
   build:
     executor: platform
+    steps:
+      - setup
+      - run:
+          command: /bin/bash -c "./tasks build"
+      - run:
+          command: /bin/bash -c "./tasks push"
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - image/imagerc
+  build_mac:
+    executor: mac
     steps:
       - setup
       - run:
@@ -95,3 +109,7 @@ executors:
     machine:
       image: ubuntu-2204:2023.02.1
     working_directory: ~/repo
+  mac:
+    macos:
+      xcode: 16.2.0
+    resource_class: macos.m1.medium.gen1

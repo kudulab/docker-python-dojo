@@ -1,3 +1,7 @@
+### 2.0.3 (2025-Apr-30)
+
+* publish a separate docker image for mac
+
 ### 2.0.2 (2024-Feb-06)
 
 * use Dojo image scripts 0.13.0
